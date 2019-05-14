@@ -99,20 +99,16 @@ export interface SageMakerNotebookStopWorkflowProps {
       /** Configure the /fail method */
       const failResource = api.root.addResource('fail');
       const failMethod = failResource.addMethod('GET', failureIntegration);
-      const failMethodResource = failMethod.findChild('Resource') as apigw.cloudformation.MethodResource;
-      failMethodResource.propertyOverrides.methodResponses = [
-        { statusCode: "200"}
-      ];
-      failMethodResource.propertyOverrides.requestParameters = { "method.request.querystring.taskToken": false };
+      const failMethodResource = failMethod.node.findChild('Resource') as apigw.CfnMethod;
+      failMethodResource.addPropertyOverride("MethodResponses", [  { StatusCode: "200"} ]);
+      failMethodResource.addPropertyOverride("RequestParameters", { "method.request.querystring.taskToken": false } );      
 
       /** Configure the /success method */
       const successResource = api.root.addResource('succeed');
       const successMethod = successResource.addMethod('GET', successIntegration);
-      const successMethodResource = successMethod.findChild('Resource') as apigw.cloudformation.MethodResource;
-      successMethodResource.propertyOverrides.methodResponses = [
-        { statusCode: "200"}
-      ];
-      successMethodResource.propertyOverrides.requestParameters = { "method.request.querystring.taskToken": false };
+      const successMethodResource = successMethod.node.findChild('Resource') as apigw.CfnMethod;
+      successMethodResource.addPropertyOverride("MethodResponses", [  { StatusCode: "200"} ]);
+      successMethodResource.addPropertyOverride("RequestParameters", { "method.request.querystring.taskToken": false } );    
     
       /** Create the Step Function activities and state machine */
       const manualActivity = new stepfunctions.Activity(this, 'ManualActivity');
@@ -126,7 +122,7 @@ export interface SageMakerNotebookStopWorkflowProps {
         timeout: 120,
         environment: {
           STEPFUNCTION_ACTIVITY_ARN: manualActivity.activityArn,
-          API_GW_URI: 'https://' + api.restApiId + '.execute-api.' + new cdk.AwsRegion() + '.amazonaws.com/prod'
+          API_GW_URI: 'https://' + api.restApiId + '.execute-api.' + this.node.stack.region + '.amazonaws.com/prod'
         }
       });    
   

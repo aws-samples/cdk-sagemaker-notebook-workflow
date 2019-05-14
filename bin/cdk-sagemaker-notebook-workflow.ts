@@ -8,10 +8,12 @@ class CdkSagemakerNotebookWorkflowStack extends cdk.Stack {
     super(parent, name, props);
 
     /** set the parameters of the setup */
-    const notebookName =  this.getContext("notebook_name");
-    const emailAddress =  this.getContext("email_address");
-    const stopWorkflowSchedule = this.getContext("stop_schedule") || "rate(5 minutes)"
-    const startWorkflowSchedule = this.getContext("start_schedule") || "rate(5 minutes)";
+    this.node.requireContext('notebook_name');
+    const notebookName =  this.node.getContext("notebook_name");
+    this.node.requireContext('email_address');
+    const emailAddress =  this.node.getContext("email_address");
+    const stopWorkflowSchedule = this.node.getContext("stop_schedule") || "rate(5 minutes)"
+    const startWorkflowSchedule = this.node.getContext("start_schedule") || "rate(5 minutes)";
 
     /** Create the SageMaker stop notebook workflow */
     new SageMakerNotebookStopWorkflow(this, 'MySageMakerStopNotebookWorkflow', {
