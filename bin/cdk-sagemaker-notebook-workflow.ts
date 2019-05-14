@@ -1,7 +1,8 @@
 #!/usr/bin/env node
+import 'source-map-support/register';
 import cdk = require('@aws-cdk/cdk');
-import { SageMakerNotebookStopWorkflow } from './sagemaker-nb-stop-workflow';
-import { SageMakerNotebookStartWorkflow } from './sagemaker-nb-start-workflow';
+import { SageMakerNotebookStopWorkflow } from '../lib/sagemaker-nb-stop-workflow';
+import { SageMakerNotebookStartWorkflow } from '../lib/sagemaker-nb-start-workflow';
 
 class CdkSagemakerNotebookWorkflowStack extends cdk.Stack {
   constructor(parent: cdk.App, name: string, props?: cdk.StackProps) {
