@@ -83,13 +83,15 @@ npm run build
 3. Now deploy your application using the following CDK command:
 
 ```
-cdk deploy -c notebook_name=<notebook name> -c email_address=<email address> [-c stop_schedule=<cron expression> -c start_schedule=<cron expression>]
+cdk deploy -c notebook_name=<notebook name> -c email_address=<email address> [-c stop_schedule=<cron expression> -c start_schedule=<cron expression> -c confirm=[true|false]]
 ```
 
 Replace values for the following parameters:
 * `<notebook name>` the name of your SageMaker notebook instance
 * `<email address>` the email address to receive the notification and already verified with SES.
 * `<cron_expression>` a cron expression which will schedule the notification.
+
+The `confirm` field is optional if you would prefer not to confirm the stop/start actions via email but process automatically.
 
 For example, if you want to launch the worklflow that sends a start reminder every workday (i.e. Mon-Fri) at 9am Pacific time and sends the reminder to stop at 5pm Pacific time then launch with the command below:
 
@@ -101,4 +103,15 @@ cdk deploy \
         -c stop_schedule="cron(0 1 ? * TUE-SAT *)"
 ```
 
-Now your application will be deployed to your AWS account
+The example below shows the command to to launch the worklflow that automatically starts the notebook instance every workday (i.e. Mon-Fri) at 9am Pacific time and automatically stops it at 5pm Pacific time:
+
+```
+cdk deploy \
+        -c notebook_name=<notebook name> \
+        -c email_address=<email address> \
+        -c start_schedule="cron(0 17 ? * MON-FRI *)" \
+        -c stop_schedule="cron(0 1 ? * TUE-SAT *)" \
+        -c confirm=false
+```
+
+Now your application will be deployed to your AWS account.

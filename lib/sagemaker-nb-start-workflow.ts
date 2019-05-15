@@ -13,6 +13,8 @@ export interface SageMakerNotebookStartWorkflowProps {
     emailAddress: string;
     /** the cron schedule expression for the notification event */
     scheduleExpression: string;
+    /** boolean flag to confirm start via email */
+    confirmViaEmail: boolean;
 }
 
 export class SageMakerNotebookStartWorkflow extends cdk.Construct {
@@ -150,7 +152,7 @@ export class SageMakerNotebookStartWorkflow extends cdk.Construct {
     
     const startNotebookJob = new stepfunctions.Task(this, 'Start Notebook Job', {
         resource: startNbFunction,
-        inputPath: '$.[0]'
+        resultPath: '$.result'
     });        
     
     const sendNotificationJob = new stepfunctions.Task(this, 'Send Notification Job', {
@@ -182,30 +184,45 @@ export class SageMakerNotebookStartWorkflow extends cdk.Construct {
         }
     });
 
+    const noConfirm = new stepfunctions.Pass(this, 'No Confirm');
+
     const manualTask = new stepfunctions.Task(this, 'ManualTask', {
       resource: manualActivity,
       resultPath: '$.ManualTaskResult', 
       timeoutSeconds: 3600
     });
 
+    const choiceNotebookRunning = new stepfunctions.Choice(this, 'Notebook Running?');
+
+    const choiceNeedConfirmation = new stepfunctions.Choice(this, 'Need Confirmation?');
+
+    const choiceNotebookStarted = new stepfunctions.Choice(this, 'Notebook Started?');
+
+    const conditionNotebookStopped = stepfunctions.Condition.stringEquals('$.NotebookStatus', 'Stopped');
+
+    const conditionConfirmationNeeded = stepfunctions.Condition.stringEquals('$.Confirm', 'True');
+
+    const conditionNotebookInService = stepfunctions.Condition.stringEquals('$.NotebookStatus', 'InService');
+
     const definition = getStatusJob1
-                        .next(new stepfunctions.Choice(this, 'Notebook Running?')
-                            // Look at the "status" field
-                            .when(stepfunctions.Condition.stringEquals('$.NotebookStatus', 'Stopped'), 
-                              parallel.branch(sendNotificationJob)
-                                      .branch(manualTask)
-                                      .addCatch(cancelStartAction)
-                                      .next(startNotebookJob
-                                              .next(injectParams)
-                                              .next(waitStep)
-                                              .next(getStatusJob2)
-                                              .next(new stepfunctions.Choice(this, 'Notebook Started?')
-                                                  .when(stepfunctions.Condition.stringEquals('$.NotebookStatus', 'InService'), 
-                                                      generateUrlandNotifyJob.next(startSuccessState))
-                                                  .otherwise(waitStep))
-                                      )
-                            )
-                            .otherwise(notStoppedState));
+                        .next(choiceNotebookRunning
+                          .when(conditionNotebookStopped, choiceNeedConfirmation
+                                .when(conditionConfirmationNeeded, parallel
+                                  .branch(sendNotificationJob)
+                                  .branch(manualTask)
+                                  .addCatch(cancelStartAction))
+                                .otherwise(noConfirm)
+                                .afterwards()
+                          .next(injectParams)
+                          .next(startNotebookJob)
+                          .next(waitStep)
+                          .next(getStatusJob2)
+                          .next(choiceNotebookStarted
+                              .when(conditionNotebookInService, 
+                                  generateUrlandNotifyJob.next(startSuccessState))
+                              .otherwise(waitStep))                  
+                        )
+                        .otherwise(notStoppedState));
 
     const statemachine = new stepfunctions.StateMachine(this, 'StateMachine', {
         definition: definition,
@@ -221,6 +238,7 @@ export class SageMakerNotebookStartWorkflow extends cdk.Construct {
       jsonTemplate: JSON.stringify({
         NotebookName: props.notebookName,
         EmailAddress: props.emailAddress,
+        Confirm: props.confirmViaEmail ? 'True' : 'False',
       }),
     });      
   }

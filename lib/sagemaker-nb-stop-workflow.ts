@@ -13,6 +13,8 @@ export interface SageMakerNotebookStopWorkflowProps {
     emailAddress: string;
     /** the cron schedule expression for the notification event */
     scheduleExpression: string;
+    /** boolean flag to confirm start via email */
+    confirmViaEmail: boolean;    
   }
 
   export class SageMakerNotebookStopWorkflow extends cdk.Construct {
@@ -134,7 +136,6 @@ export interface SageMakerNotebookStopWorkflowProps {
       
       const stopNotebookJob = new stepfunctions.Task(this, 'Stop Notebook Job', {
           resource: stopNbFunction,
-          inputPath: '$.[0]',
           // Put Lambda's result here in the execution's state object
       });        
       
@@ -158,15 +159,37 @@ export interface SageMakerNotebookStopWorkflowProps {
         resultPath: '$.ManualTaskResult', 
         timeoutSeconds: 3600
       });
+
+      const injectParams = new stepfunctions.Pass(this, 'Inject Params', {
+        result: {
+          NotebookName: props.notebookName,
+          EmailAddress: props.emailAddress,            
+        }
+      });
+
+      const noConfirm = new stepfunctions.Pass(this, 'No Confirm');
+
+      const choiceNotebookRunning = new stepfunctions.Choice(this, 'Notebook Running?');
+
+      const choiceNeedConfirmation = new stepfunctions.Choice(this, 'Need Confirmation?');
+
+      const conditionConfirmationNeeded = stepfunctions.Condition.stringEquals('$.Confirm', 'True');
+
+      const conditionNotebookInService = stepfunctions.Condition.stringEquals('$.NotebookStatus', 'InService');
   
       const definition = getStatusJob
-                          .next(new stepfunctions.Choice(this, 'Notebook Running?')
+                          .next(choiceNotebookRunning
                               // Look at the "status" field
-                              .when(stepfunctions.Condition.stringEquals('$.NotebookStatus', 'InService'), 
-                                parallel.branch(sendNotificationJob)
+                              .when(conditionNotebookInService, choiceNeedConfirmation
+                                  .when(conditionConfirmationNeeded, parallel
+                                        .branch(sendNotificationJob)
                                         .branch(manualTask)
-                                        .addCatch(cancelStopAction)
-                                        .next(stopNotebookJob.next(stopSuccessState)))
+                                        .addCatch(cancelStopAction))
+                                  .otherwise(noConfirm)
+                                  .afterwards()
+                                .next(injectParams)
+                                .next(stopNotebookJob)
+                                .next(stopSuccessState))
                               .otherwise(notRunningState));
   
       const statemachine = new stepfunctions.StateMachine(this, 'StateMachine', {
@@ -183,6 +206,7 @@ export interface SageMakerNotebookStopWorkflowProps {
         jsonTemplate: JSON.stringify({
           NotebookName: props.notebookName,
           EmailAddress: props.emailAddress,
+          Confirm: props.confirmViaEmail ? 'True' : 'False',          
         }),
       });  
     }
