@@ -80,38 +80,29 @@ npm install
 npm run build
 ```
 
-3. Now deploy your application using the following CDK command:
+3. Edit the CDK stack file named `lib/sagemaker-nb-workflow-stack.ts`. Enter the values for your notebook name, email address and cron expressions for the start and stop times as well a confirming if
 
 ```
-cdk deploy -c notebook_name=<notebook name> -c email_address=<email address> [-c stop_schedule=<cron expression> -c start_schedule=<cron expression> -c confirm=[true|false]]
-```
+export class SagemakerNotebookWorkflowStack extends cdk.Stack {
+    constructor(parent: cdk.App, name: string, props?: cdk.StackProps) {
+        super(parent, name, props);
+    
+    // The code that defines your stack goes here
+    /** Create the SageMaker notebook instance */
+    new SageMakerNotebookWorkflow(this, 'SageMakerNotebookWorkflow', {
+        notebookName: "mynotebook", // enter your notebook name here
+        emailAddress: "bob@example.com", // enter the email address to get notifications
+        startSchedule: "cron(0 9 ? * MON-FRI *)", // enter the start schedule as a cron expression. Defaults to every weekday at 9am Pacific time
+        stopSchedule: "cron(0 17 ? * MON-FRI *)", // enter the stop schedule as a cron expression. Defaults to every weekday at 5pm Pacific time
+        confirmViaEmail: true, // confirm if you want to receive an email confirmation to start and stop the notebook
+      });      
+    }
+}
 
-Replace values for the following parameters:
-* `<notebook name>` the name of your SageMaker notebook instance
-* `<email address>` the email address to receive the notification and already verified with SES.
-* `<cron_expression>` a cron expression which will schedule the notification.
-
-The `confirm` field is optional if you would prefer not to confirm the stop/start actions via email but process automatically.
-
-For example, if you want to launch the worklflow that sends a start reminder every workday (i.e. Mon-Fri) at 9am Pacific time and sends the reminder to stop at 5pm Pacific time then launch with the command below:
-
-```
-cdk deploy \
-        -c notebook_name=<notebook name> \
-        -c email_address=<email address> \
-        -c start_schedule="cron(0 17 ? * MON-FRI *)" \
-        -c stop_schedule="cron(0 1 ? * TUE-SAT *)"
-```
-
-The example below shows the command to to launch the worklflow that automatically starts the notebook instance every workday (i.e. Mon-Fri) at 9am Pacific time and automatically stops it at 5pm Pacific time:
+4. Build & Deploy the application with the commands:
 
 ```
-cdk deploy \
-        -c notebook_name=<notebook name> \
-        -c email_address=<email address> \
-        -c start_schedule="cron(0 17 ? * MON-FRI *)" \
-        -c stop_schedule="cron(0 1 ? * TUE-SAT *)" \
-        -c confirm=false
+npm run build
+cdk deploy
 ```
 
-Now your application will be deployed to your AWS account.
