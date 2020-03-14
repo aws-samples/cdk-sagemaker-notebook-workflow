@@ -12,16 +12,18 @@
         "cdk": "cdk"
     },
     "devDependencies": {
-        "@types/node": "^8.9.4",
-        "typescript": "^3.1.2",
-        "aws-cdk": "^0.31.0"
+        "@types/node": "^13.9.1",
+        "typescript": "^3.8.3",
+        "aws-cdk": "^1.27.0"
     },
     "dependencies": {
-        "@aws-cdk/aws-apigateway": "^0.31.0",
-        "@aws-cdk/aws-events": "^0.31.0",
-        "@aws-cdk/aws-iam": "^0.31.0",
-        "@aws-cdk/aws-lambda": "^0.31.0",
-        "@aws-cdk/aws-stepfunctions": "^0.31.0",
-        "@aws-cdk/cdk": "^0.31.0"
+        "@aws-cdk/aws-apigateway": "^1.27.0",
+        "@aws-cdk/aws-events": "^1.27.0",
+        "@aws-cdk/aws-events-targets": "^1.27.0",
+        "@aws-cdk/aws-iam": "^1.27.0",
+        "@aws-cdk/aws-lambda": "^1.27.0",
+        "@aws-cdk/aws-stepfunctions": "^1.27.0",
+        "@aws-cdk/aws-stepfunctions-tasks": "^1.27.0",
+        "@aws-cdk/cdk": "^0.36.1"
     }
 }
