@@ -77,12 +77,11 @@ git clone https://github.com/mattmcclean/cdk-sagemaker-notebook-workflow.git
 ```
 cd cdk-sagemaker-notebook-workflow
 npm install
-npm run build
 ```
 
 3. Edit the CDK stack file named `lib/sagemaker-nb-workflow-stack.ts`. Enter the values for your notebook name, email address and cron expressions for the start and stop times as well a confirming if
 
-```
+```ts
 export class SagemakerNotebookWorkflowStack extends cdk.Stack {
     constructor(parent: cdk.App, name: string, props?: cdk.StackProps) {
         super(parent, name, props);
@@ -98,7 +97,7 @@ export class SagemakerNotebookWorkflowStack extends cdk.Stack {
       });      
     }
 }
-
+```
 4. Build & Deploy the application with the commands:
 
 ```
