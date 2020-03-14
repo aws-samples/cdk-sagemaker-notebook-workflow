@@ -5,3 +5,4 @@ node_modules
 *.bk
 ~$*.pptx
 .cdk*
+cdk.out/
