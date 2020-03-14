@@ -79,7 +79,7 @@ cd cdk-sagemaker-notebook-workflow
 npm install
 ```
 
-3. Edit the CDK stack file named `lib/sagemaker-nb-workflow-stack.ts`. Enter the values for your notebook name, email address and cron expressions for the start and stop times as well a confirming if
+3. Edit the CDK stack file named `lib/sagemaker-nb-workflow-stack.ts`. Enter the values for your notebook name, email address and cron expressions for the start and stop times as well a confirming if you want to receive email confirmation to start and stop the notebooks.
 
 ```ts
 export class SagemakerNotebookWorkflowStack extends cdk.Stack {
